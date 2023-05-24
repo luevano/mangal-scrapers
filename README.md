@@ -17,3 +17,4 @@ Feel free to contribute! You can use `mangal sources gen --name "..." --url "...
 - [Mangasee](scrapers/Mangasee.lua)
 - [Readmanga](scrapers/Readmanga.lua)
 - [Flame Scans](scrapers/FlameScans.lua)
+- [ScansManga](scrapers/ScansManga.lua)
