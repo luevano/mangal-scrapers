@@ -1,28 +1,32 @@
 ------------------------------
--- @name    ComicK
+-- @name    ComicK 
 -- @url     https://comick.fun
--- @author  Sravan Balaji
+-- @author  david 
 -- @license MIT
 ------------------------------
 
 
+---@alias manga { name: string, url: string, author: string|nil, genres: string|nil, summary: string|nil }
+---@alias chapter { name: string, url: string, volume: string|nil, manga_summary: string|nil, manga_author: string|nil, manga_genres: string|nil }
+---@alias page { url: string, index: number }
 
 
 ----- IMPORTS -----
-Http = require('http')
-Json = require('json')
+HttpUtil = require("http_util")
+Headless = require("headless")
+Json = require("json")
 --- END IMPORTS ---
 
 
 
 
 ----- VARIABLES -----
-Client = Http.client({ timeout = 20 })
-ApiBase = 'https://api.comick.fun'
-ImageBase = 'https://meo3.comick.pictures'
+Browser = Headless.browser()
+ApiBase = "https://api.comick.fun"
+ImageBase = "https://meo.comick.pictures"
 Limit = 50
-Lang = 'en' -- Language: en = english, fr = french, etc.
-Order = 1 -- Chapter Order: 0 = descending, 1 = ascending
+Lang = "en" -- en, fr, etc
+Order = 1 -- 0 = desc, 1 = asc
 --- END VARIABLES ---
 
 
@@ -30,118 +34,118 @@ Order = 1 -- Chapter Order: 0 = descending, 1 = ascending
 ----- MAIN -----
 
 --- Searches for manga with given query.
--- @param query Query to search for
--- @return Table of tables with the following fields: name, url
+-- @param query string Query to search for
+-- @return manga[] Table of mangas
 function SearchManga(query)
-    local request_url = ApiBase .. '/search?&q=' .. query
-    local request = Http.request('GET', request_url)
-    local result = Client:do_request(request)
-    local result_body = Json.decode(result['body'])
+	local page = Browser:page()
+	page:navigate(ApiBase .. "/v1.0/search/?q=" .. HttpUtil.query_escape(query))
+	page:waitLoad()
+	local mangas = {}
+	local i = 1
 
-    local mangas = {}
-    local i = 1
+	local response_json = Json.decode(page:element("pre"):text())
+	for _, json in pairs(response_json) do
+		local title = json["title"]
 
-    for _, val in pairs(result_body) do
-        local title = val['title']
+		if title ~= nil then
+			local hid = json["hid"]
+			manga = {name = title,
+					 url = ApiBase .. "/comic/" .. tostring(hid)}
 
-        if title ~= nil then
-            local id = val['id']
-            local link = ApiBase .. '/comic/' .. tostring(id) .. '/chapter'
-            local manga = { url = link, name = title }
+			mangas[i] = manga
+			i = i + 1
+		end
+	end
 
-            mangas[i] = manga
-            i = i + 1
-        end
-    end
-
-    return mangas
+	return mangas
 end
 
 --- Gets the list of all manga chapters.
--- @param mangaURL URL of the manga
--- @return Table of tables with the following fields: name, url
+-- @param mangaURL string URL of the manga
+-- @return chapter[] Table of chapters
 function MangaChapters(mangaURL)
-    local request_url = mangaURL .. '?lang=' .. Lang .. '&limit=' .. Limit .. '&chap-order=' .. Order
-    local chapters = {}
-    local i = 1
+	local page = Browser:page()
+	local reqURL = mangaURL .. "/chapters" .. "?lang=" .. Lang .. "&limit=" .. Limit .. "&chap-order=" .. Order
+	page:navigate(reqURL)
+	page:waitLoad()
+	local chapters = {}
+	local i = 1
 
-    local request = Http.request('GET', request_url)
-    local result = Client:do_request(request)
-    local result_body = Json.decode(result['body'])
-    local num_chapters = result_body['total']
-    local num_pages = math.ceil(num_chapters / Limit)
+	-- Need to scrape by chunks
+	local num_chapters = Json.decode(page:element("pre"):text())["total"]
+	local num_pages = math.ceil(num_chapters / Limit)
+	for j = 1, num_pages do
+		page:navigate(reqURL .. "&page=" .. j)
+		page:waitLoad()
+		local response_json = Json.decode(page:element("pre"):text())
 
-    for j = 1, num_pages do
-        request = Http.request('GET', request_url .. '&page=' .. j)
-        result = Client:do_request(request)
-        result_body = Json.decode(result['body'])
+		for _, json in pairs(response_json["chapters"]) do
+			local hid = json["hid"]
+			local num = json["chap"]
 
-        for _, val in pairs(result_body['chapters']) do
-            local hid = val['hid']
-            local num = val['chap']
-            if num == nil then
-                num = 0
-            end
+			if num == nil then
+				num = 0
+			end
 
-            local volume = tostring(val['vol'])
-            if volume ~= "nil" then
-                volume = "Vol." .. volume
-            else
-                volume = ""
-            end
-            local title = val['title']
-            local chap = 'Chapter ' .. tostring(num)
-            local group_name = val['group_name']
+			local volume = tostring(json["vol"])
+			if volume ~= "nil" then
+				volume = "Vol." .. volume
+			else
+				volume = ""
+			end
+			local title = json["title"]
+			local chap = "Chapter " .. tostring(num)
+			local group_name = json["group_name"]
 
-            if title then
-                chap = chap .. ': ' .. tostring(title)
-            end
+			if title then
+				chap = chap .. ": " .. tostring(title)
+			end
 
-            if group_name then
-                chap = chap .. ' ['
-                for key, group in pairs(group_name) do
-                    if key ~= 1 then
-                        chap = chap .. ', '
-                    end
+			if group_name then
+				chap = chap .. " ["
+				for key, group in pairs(group_name) do
+					if key ~= 1 then
+						chap = chap .. ", "
+					end
+					chap = chap .. tostring(group)
+				end
+				chap = chap .. "]"
+			end
 
-                    chap = chap .. tostring(group)
-                end
-                chap = chap .. ']'
-            end
+			local chapter = {name = chap,
+							 volume = volume,
+							 url = ApiBase .. "/chapter/" .. tostring(hid)}
 
-            local link = ApiBase .. '/chapter/' .. tostring(hid)
-            local chapter = { url = link, name = chap, volume = volume }
+			chapters[i] = chapter
+			i = i + 1
+		end
+	end
 
-            chapters[i] = chapter
-            i = i + 1
-        end
-    end
-
-    return chapters
+	return chapters
 end
 
+
 --- Gets the list of all pages of a chapter.
--- @param chapterURL URL of the chapter
--- @return Table of tables with the following fields: url, index
+-- @param chapterURL string URL of the chapter
+-- @return page[]
 function ChapterPages(chapterURL)
-    local request = Http.request('GET', chapterURL)
-    local result = Client:do_request(request)
-    local result_body = Json.decode(result['body'])
-    local chapter_table = result_body['chapter']
+	local page = Browser:page()
+	page:navigate(chapterURL)
+	page:waitLoad()
+	local pages = {}
+	local i = 1
 
-    local pages = {}
-    local i = 1
+	local response_json = Json.decode(page:element("pre"):text())
 
-    for key, val in pairs(chapter_table['md_images']) do
-        local ind = key
-        local link = ImageBase .. '/' .. val['b2key']
-        local page = { url = link, index = ind }
+	for i, json in pairs(response_json["chapter"]["md_images"]) do
+		local page = {index = i,
+					  url = ImageBase .. "/" .. json["b2key"]}
 
-        pages[i] = page
-        i = i + 1
-    end
+		pages[i] = page
+		i = i + 1
+	end
 
-    return pages
+	return pages
 end
 
 --- END MAIN ---
