@@ -36,3 +36,4 @@ Available modules are from [mangal-lua-libs](https://github.com/metafates/mangal
 - [FlameScans](scrapers/FlameScans.lua)
 - [ScansManga](scrapers/ScansManga.lua)
 - [ReadComicOnline](scrapers/ReadComicOnline.lua)
+- [ComicExtra](scrapers/ComicExtra.lua)
