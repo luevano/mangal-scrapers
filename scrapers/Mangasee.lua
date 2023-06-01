@@ -10,7 +10,6 @@
 
 ----- IMPORTS -----
 Html = require("html")
-Http = require("http")
 HttpUtil = require("http_util")
 Headless = require("headless")
 Strings = require("strings")
@@ -20,7 +19,6 @@ Strings = require("strings")
 
 
 ----- VARIABLES -----
-Client = Http.client()
 Browser = Headless.browser()
 Base = "https://mangasee123.com"
 --- END VARIABLES ---

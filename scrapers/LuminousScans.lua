@@ -21,7 +21,6 @@ Time = require("time")
 ----- VARIABLES -----
 Client = Http.client()
 Browser = Headless.browser()
-Page = Browser:page()
 Base = "https://luminousscans.com"
 --- END VARIABLES ---
 
@@ -80,12 +79,14 @@ end
 -- @param chapterURL URL of the chapter
 -- @return Table of tables with the following fields: url, index
 function ChapterPages(chapterURL)
-    Page:navigate(chapterURL)
+    local page = Browser:page()
+    page:navigate(chapterURL)
+    page:waitLoad()
     Time.sleep(1)
 
     local pages = {}
 
-    for i, v in ipairs(Page:elements("#readerarea p > img")) do
+    for i, v in ipairs(page:elements("#readerarea p > img")) do
         pages[i+1] = { index = i, url = v:attribute("src") }
     end
 
