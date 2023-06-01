@@ -6,6 +6,8 @@
 ------------------------------
 
 
+---VSCode specific for the lua extension
+---@diagnostic disable: duplicate-doc-alias
 ---@alias manga { name: string, url: string, author: string|nil, genres: string|nil, summary: string|nil }
 ---@alias chapter { name: string, url: string, volume: string|nil, manga_summary: string|nil, manga_author: string|nil, manga_genres: string|nil }
 ---@alias page { url: string, index: number }
@@ -24,6 +26,7 @@ Json = require("json")
 Browser = Headless.browser()
 ApiBase = "https://api.comick.fun"
 ImageBase = "https://meo.comick.pictures"
+AddGroupName = false
 Limit = 50
 Lang = "en" -- en, fr, etc
 Order = 1 -- 0 = desc, 1 = asc
@@ -41,19 +44,17 @@ function SearchManga(query)
 	page:navigate(ApiBase .. "/v1.0/search/?q=" .. HttpUtil.query_escape(query))
 	page:waitLoad()
 	local mangas = {}
-	local i = 1
 
 	local response_json = Json.decode(page:element("pre"):text())
-	for _, json in pairs(response_json) do
+	for i, json in pairs(response_json) do
 		local title = json["title"]
 
 		if title ~= nil then
 			local hid = json["hid"]
-			manga = {name = title,
-					 url = ApiBase .. "/comic/" .. tostring(hid)}
+			local manga = {name = title,
+					       url = ApiBase .. "/comic/" .. tostring(hid)}
 
-			mangas[i] = manga
-			i = i + 1
+			mangas[i + 1] = manga
 		end
 	end
 
@@ -72,14 +73,14 @@ function MangaChapters(mangaURL)
 	local i = 1
 
 	-- Need to scrape by chunks
-	local num_chapters = Json.decode(page:element("pre"):text())["total"]
-	local num_pages = math.ceil(num_chapters / Limit)
-	for j = 1, num_pages do
+	local numChapters = Json.decode(page:element("pre"):text())["total"]
+	local numPages = math.ceil(numChapters / Limit)
+	for j = 1, numPages do
 		page:navigate(reqURL .. "&page=" .. j)
 		page:waitLoad()
-		local response_json = Json.decode(page:element("pre"):text())
+		local responseJson = Json.decode(page:element("pre"):text())
 
-		for _, json in pairs(response_json["chapters"]) do
+		for _, json in pairs(responseJson["chapters"]) do
 			local hid = json["hid"]
 			local num = json["chap"]
 
@@ -95,15 +96,15 @@ function MangaChapters(mangaURL)
 			end
 			local title = json["title"]
 			local chap = "Chapter " .. tostring(num)
-			local group_name = json["group_name"]
+			local groupName = json["group_name"]
 
 			if title then
 				chap = chap .. ": " .. tostring(title)
 			end
 
-			if group_name then
+			if (AddGroupName and groupName) then
 				chap = chap .. " ["
-				for key, group in pairs(group_name) do
+				for key, group in pairs(groupName) do
 					if key ~= 1 then
 						chap = chap .. ", "
 					end
@@ -133,7 +134,6 @@ function ChapterPages(chapterURL)
 	page:navigate(chapterURL)
 	page:waitLoad()
 	local pages = {}
-	local i = 1
 
 	local response_json = Json.decode(page:element("pre"):text())
 
@@ -141,8 +141,7 @@ function ChapterPages(chapterURL)
 		local page = {index = i,
 					  url = ImageBase .. "/" .. json["b2key"]}
 
-		pages[i] = page
-		i = i + 1
+		pages[i + 1] = page
 	end
 
 	return pages
