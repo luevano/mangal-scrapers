@@ -1,5 +1,5 @@
 ------------------------------------
--- @name    Mangasee
+-- @name    MangaSee
 -- @url     https://mangasee123.com/
 -- @author  alperen
 -- @license MIT

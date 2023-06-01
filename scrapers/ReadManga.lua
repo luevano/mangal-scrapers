@@ -1,5 +1,5 @@
 --------------------------
--- @name    Readmanga 
+-- @name    ReadManga 
 -- @url     https://readmanga.live/
 -- @author  ts-vadim (https://github.com/ts-vadim)
 -- @license MIT

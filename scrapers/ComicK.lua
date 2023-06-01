@@ -1,7 +1,7 @@
 ------------------------------
 -- @name    ComicK 
 -- @url     https://comick.fun
--- @author  Sravan Balaji and luevano 
+-- @author  Sravan Balaji and luevano (https://github.com/luevano)
 -- @license MIT
 ------------------------------
 

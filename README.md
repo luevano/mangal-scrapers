@@ -28,10 +28,10 @@ Available modules are from [mangal-lua-libs](https://github.com/metafates/mangal
 
 ## Scrapers
 
-- [Asura Scans](scrapers/AsuraScans.lua)
+- [AsuraScans](scrapers/AsuraScans.lua)
 - [ComicK](scrapers/ComicK.lua)
-- [Luminous Scans](scrapers/LuminousScans.lua)
-- [Mangasee](scrapers/Mangasee.lua)
-- [Readmanga](scrapers/Readmanga.lua)
-- [Flame Scans](scrapers/FlameScans.lua)
+- [LuminousScans](scrapers/LuminousScans.lua)
+- [MangaSee](scrapers/Mangasee.lua)
+- [ReadManga](scrapers/Readmanga.lua)
+- [FlameScans](scrapers/FlameScans.lua)
 - [ScansManga](scrapers/ScansManga.lua)
