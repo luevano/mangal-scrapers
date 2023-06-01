@@ -39,7 +39,6 @@ SearchWaitTime = 5
 -- @param query string Query to search for
 -- @return manga[] Table of mangas
 function SearchManga(query)
-	-- A headless browser is only required for the search
 	local page = Browser:page()
 	page:navigate(UrlBase)
 	page:waitLoad()
