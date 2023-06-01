@@ -24,6 +24,8 @@ Strings = require("strings")
 
 
 ----- VARIABLES -----
+Browser = Headless.browser()
+Page = Browser:page()
 Base = "https://mangasee123.com"
 --- END VARIABLES ---
 
@@ -35,12 +37,10 @@ Base = "https://mangasee123.com"
 -- @param query string Query to search for
 -- @return manga[] Table of mangas
 function SearchManga(query)
-	local browser = Headless.browser()
-	local page = browser:page()
-	page:navigate(Base .. "/search/?name=" .. HttpUtil.query_escape(query))
-	page:waitLoad()
+	Page:navigate(Base .. "/search/?name=" .. HttpUtil.query_escape(query))
+	Page:waitLoad()
 
-	local doc = Html.parse(page:html())
+	local doc = Html.parse(Page:html())
 	local mangas = {}
 
 	doc:find(".top-15.ng-scope"):each(function(i, s)
@@ -49,7 +49,6 @@ function SearchManga(query)
 		mangas[i + 1] = manga
 	end)
 
-	browser:close()
 	return mangas
 end
 
@@ -57,15 +56,13 @@ end
 -- @param mangaURL string URL of the manga
 -- @return chapter[] Table of chapters
 function MangaChapters(mangaURL)
-	local browser = Headless.browser()
-	local page = browser:page()
-	page:navigate(mangaURL)
-	page:waitLoad()
-	if page:has('.ShowAllChapters') == true then
-		page:element('.ShowAllChapters'):click()
+	Page:navigate(mangaURL)
+	Page:waitLoad()
+	if Page:has('.ShowAllChapters') == true then
+		Page:element('.ShowAllChapters'):click()
 	end
 
-	local doc = Html.parse(page:html())
+	local doc = Html.parse(Page:html())
 
 	local chapters = {}
 
@@ -78,7 +75,6 @@ function MangaChapters(mangaURL)
 
 	Reverse(chapters)
 
-	browser:close()
 	return chapters
 end
 
@@ -86,12 +82,10 @@ end
 -- @param chapterURL string URL of the chapter
 -- @return page[]
 function ChapterPages(chapterURL)
-	local browser = Headless.browser()
-	local page = browser:page()
-	page:navigate(chapterURL)
-	page:waitLoad()
-	page:element('.DesktopNav > div > div:nth-child(4) > button'):click()
-	local doc = Html.parse(page:html())
+	Page:navigate(chapterURL)
+	Page:waitLoad()
+	Page:element('.DesktopNav > div > div:nth-child(4) > button'):click()
+	local doc = Html.parse(Page:html())
 
 	local pages = {}
 
@@ -110,7 +104,6 @@ function ChapterPages(chapterURL)
 		end
 	end)
 
-	browser:close()
 	return pages
 end
 
