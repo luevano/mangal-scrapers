@@ -39,18 +39,17 @@ Base = "https://mangasee123.com"
 function SearchManga(query)
 	Page:navigate(Base .. "/search/?name=" .. HttpUtil.query_escape(query))
 	Page:waitLoad()
-
 	local doc = Html.parse(Page:html())
-	local mangas = {}
 
+	local mangas = {}
 	doc:find(".top-15.ng-scope"):each(function(i, s)
-		local manga = { name = s:find('.SeriesName[ng-bind-html="Series.s"]'):first():text(),
-			url = Base .. s:find('.SeriesName[ng-bind-html="Series.s"]'):first():attr("href") }
-		mangas[i + 1] = manga
+		mangas[i + 1] = {name = s:find('.SeriesName[ng-bind-html="Series.s"]'):first():text(),
+					   url = Base .. s:find('.SeriesName[ng-bind-html="Series.s"]'):first():attr("href")}
 	end)
 
 	return mangas
 end
+
 
 --- Gets the list of all manga chapters.
 -- @param mangaURL string URL of the manga
@@ -61,22 +60,19 @@ function MangaChapters(mangaURL)
 	if Page:has('.ShowAllChapters') == true then
 		Page:element('.ShowAllChapters'):click()
 	end
-
 	local doc = Html.parse(Page:html())
 
 	local chapters = {}
-
 	doc:find(".ChapterLink"):each(function(i, s)
 		local name = s:find('span'):first():text()
 		name = Strings.trim(name:gsub("[\r\t\n]+", " "), " ")
-		local chapter = { name = name, url = Base .. s:attr("href") }
-		chapters[i + 1] = chapter
+		chapters[i + 1]= {name = name, url = Base .. s:attr("href")}
 	end)
-
 	Reverse(chapters)
 
 	return chapters
 end
+
 
 --- Gets the list of all pages of a chapter.
 -- @param chapterURL string URL of the chapter
@@ -88,19 +84,16 @@ function ChapterPages(chapterURL)
 	local doc = Html.parse(Page:html())
 
 	local pages = {}
-
 	local images = {}
 	doc:find('.img-fluid'):each(function(i, s)
-		images[i+1] = tostring(s:attr('src'))
+		images[i + 1] = tostring(s:attr('src'))
 	end)
 
 	local modal = doc:find("#PageModal"):first()
-	modal:find('button[ng-click="vm.GoToPage(Page)"]'):each(function(i, s)
-
+	modal:find('button[ng-click="vm.GoToPage(Page)"]'):each(function(_, s)
 		local index = tonumber(Strings.trim(s:text():gsub("[\r\t\n]+", " "), " "))
 		if index ~= nil then
-			local chapterPage = { index = index, url = images[index] }
-			pages[index] = chapterPage
+			pages[index] = {index = index, url = images[index]}
 		end
 	end)
 
