@@ -73,8 +73,8 @@ function MangaChapters(mangaURL)
 	    local month = month_names[month_name]
 
 	    local timestamp = os.time({year=year, month=month, day=day})
-	    iso_date = os.date("%Y-%m-%d", timestamp)
-	end	
+	    iso_date = tostring(os.date("%Y-%m-%d", timestamp))
+	end
 
         local chapter = { url = link:attr("href"), name = string.gsub(link:find("span"):first():text():sub(2),"\n"," "), chapter_date=iso_date }
 

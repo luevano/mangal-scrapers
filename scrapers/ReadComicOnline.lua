@@ -26,6 +26,7 @@ Time = require("time")
 
 ----- VARIABLES -----
 Browser = Headless.browser()
+Page = Browser:page()
 Client = Http:client()
 UrlBase = "https://readcomiconline.li"
 SearchWaitTime = 5
@@ -39,16 +40,15 @@ SearchWaitTime = 5
 -- @param query string Query to search for
 -- @return manga[] Table of mangas
 function SearchManga(query)
-	local page = Browser:page()
-	page:navigate(UrlBase)
-	page:waitLoad()
-	page:element("input[name='keyword']"):input(query)
-	page:element("input[id='imgSearch']"):click()
-	page:waitLoad()
+	Page:navigate(UrlBase)
+	Page:waitLoad()
+	Page:element("input[name='keyword']"):input(query)
+	Page:element("input[id='imgSearch']"):click()
+	Page:waitLoad()
 	Time.sleep(SearchWaitTime)
 	local mangas = {}
 
-	local doc = Html.parse(page:html())
+	local doc = Html.parse(Page:html())
 	doc:find(".list-comic > .item"):each(function (i, s)
 		local manga = {name = Html.parse(s:attr("title")):find(".title"):text(),
 					   url = UrlBase .. s:find("a"):first():attr("href")}
@@ -57,7 +57,6 @@ function SearchManga(query)
 
 	return mangas
 end
-
 
 
 --- Gets the list of all manga chapters.
@@ -80,18 +79,15 @@ function MangaChapters(mangaURL)
 end
 
 
-
 --- Gets the list of all pages of a chapter.
 -- @param chapterURL string URL of the chapter
 -- @return page[]
 function ChapterPages(chapterURL)
-	local page = Browser:page()
-	page:navigate(chapterURL .. "&quality=hq&readType=1")
-	page:waitLoad()
+	Page:navigate(chapterURL .. "&quality=hq&readType=1")
+	Page:waitLoad()
 	local pages = {}
 
-	local doc = Html.parse(page:html())
-	-- print(page:html())
+	local doc = Html.parse(Page:html())
 	doc:find("div[id='divImage'] p"):each(function(i, s)
 		local page = {index = i,
 					  url = s:find("img"):first():attr("src")}
@@ -101,7 +97,6 @@ function ChapterPages(chapterURL)
 
 	return pages
 end
-
 
 --- END MAIN ---
 

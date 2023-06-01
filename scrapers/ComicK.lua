@@ -24,6 +24,7 @@ Json = require("json")
 
 ----- VARIABLES -----
 Browser = Headless.browser()
+Page = Browser:page()
 ApiBase = "https://api.comick.fun"
 ImageBase = "https://meo.comick.pictures"
 AddGroupName = false
@@ -40,12 +41,11 @@ Order = 1 -- 0 = desc, 1 = asc
 -- @param query string Query to search for
 -- @return manga[] Table of mangas
 function SearchManga(query)
-	local page = Browser:page()
-	page:navigate(ApiBase .. "/v1.0/search/?q=" .. HttpUtil.query_escape(query))
-	page:waitLoad()
+	Page:navigate(ApiBase .. "/v1.0/search/?q=" .. HttpUtil.query_escape(query))
+	Page:waitLoad()
 	local mangas = {}
 
-	local response_json = Json.decode(page:element("pre"):text())
+	local response_json = Json.decode(Page:element("pre"):text())
 	for i, json in pairs(response_json) do
 		local title = json["title"]
 
@@ -65,20 +65,19 @@ end
 -- @param mangaURL string URL of the manga
 -- @return chapter[] Table of chapters
 function MangaChapters(mangaURL)
-	local page = Browser:page()
 	local reqURL = mangaURL .. "/chapters" .. "?lang=" .. Lang .. "&limit=" .. Limit .. "&chap-order=" .. Order
-	page:navigate(reqURL)
-	page:waitLoad()
+	Page:navigate(reqURL)
+	Page:waitLoad()
 	local chapters = {}
 	local i = 1
 
 	-- Need to scrape by chunks
-	local numChapters = Json.decode(page:element("pre"):text())["total"]
+	local numChapters = Json.decode(Page:element("pre"):text())["total"]
 	local numPages = math.ceil(numChapters / Limit)
 	for j = 1, numPages do
-		page:navigate(reqURL .. "&page=" .. j)
-		page:waitLoad()
-		local responseJson = Json.decode(page:element("pre"):text())
+		Page:navigate(reqURL .. "&page=" .. j)
+		Page:waitLoad()
+		local responseJson = Json.decode(Page:element("pre"):text())
 
 		for _, json in pairs(responseJson["chapters"]) do
 			local hid = json["hid"]
@@ -130,12 +129,11 @@ end
 -- @param chapterURL string URL of the chapter
 -- @return page[]
 function ChapterPages(chapterURL)
-	local page = Browser:page()
-	page:navigate(chapterURL)
-	page:waitLoad()
+	Page:navigate(chapterURL)
+	Page:waitLoad()
 	local pages = {}
 
-	local response_json = Json.decode(page:element("pre"):text())
+	local response_json = Json.decode(Page:element("pre"):text())
 
 	for i, json in pairs(response_json["chapter"]["md_images"]) do
 		local page = {index = i,
